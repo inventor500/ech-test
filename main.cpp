@@ -3,6 +3,8 @@
 #include <iostream>
 #include <iomanip>
 #include <optional>
+#include <numeric>
+#include <algorithm>
 
 std::optional<bool> doTest(const std::string& domain, const ldns_resolver *res) {
 	try {
@@ -21,6 +23,13 @@ int main(int argc, const char *argv[]) {
 	if (argc == 1) {
 		std::cout << "Usage: " << argv[0] << " <domain>" << std::endl;
 		return 1;
+	}
+	size_t maxDomainLength = std::transform_reduce(
+		argv+1, argv+argc, 0,
+		[](size_t a, size_t b){return std::max(a, b);},
+		[](const char* c){return std::string{c}.size();});
+	if (maxDomainLength == 0) {
+		std::cerr << "Received no valid input domains" << std::endl;
 	}
 	ldns_resolver *res;
 	ldns_status s = ldns_resolver_new_frm_file(&res, NULL); // Included as part of dns.hpp
