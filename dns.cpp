@@ -29,6 +29,11 @@ void doQuery(std::string& domain, const ldns_resolver *res) {
 	ldns_rr_list *https = ldns_pkt_rr_list_by_type(p, LDNS_RR_TYPE_HTTPS, LDNS_SECTION_ANSWER);
 	if (https == nullptr) {
 		ldns_rdf_deep_free(dm);
+		if (ldns_pkt_get_rcode(p) == LDNS_RCODE_NOERROR) { // Domain exists, but has no HTTPS section
+			ldns_pkt_free(p);
+			domain = "";
+			return;
+		}
 		ldns_pkt_free(p);
 		throw std::runtime_error("No records were returned");
 	}
