@@ -1,30 +1,6 @@
-#include <iostream>
-#include <iomanip>
 #include "dns.hpp"
+#include <stdexcept>
 
-int main(int argc, const char *argv[]) {
-	if (argc == 1) {
-		std::cout << "Usage: " << argv[0] << " <domain>" << std::endl;
-		return 1;
-	}
-	ldns_resolver *res;
-	ldns_status s = ldns_resolver_new_frm_file(&res, NULL);
-	if (s != LDNS_STATUS_OK) {
-		ldns_resolver_deep_free(res);
-		std::cerr << "Unable to create resolver: " << ldns_get_errorstr_by_id(s) << std::endl;
-	}
-	for (int i = 1; i < argc; i++) {
-		try {
-			std::string domain{argv[i]};
-			doQuery(domain, res);
-			std::cout << std::left << std::setw(25) << argv[i] << std::boolalpha << " " << (domain != "") << std::endl;
-		} catch (const std::runtime_error& err) {
-			std::cerr << std::left << std::setw(25) << argv[i] << " null" << std::endl;
-		}
-	}
-	ldns_resolver_deep_free(res);
-	return 0;
-}
 
 // Returns just the ech section if it exists, otherwise returns an empty string
 std::string containsEch(const std::string&& result) {
@@ -32,7 +8,10 @@ std::string containsEch(const std::string&& result) {
 	if (begin == std::string::npos) { // Not found
 		return "";
 	}
-	begin++; // Remove the space
+	begin+=5; // Remove the space and "ech="
+	if (begin >= (result.size() - 1)) { // Not set to any value
+		return "";
+	}
 	size_t end = result.find(" ", begin);
 	// ECH was the last value, no newline at end
 	if (end == std::string::npos) {
@@ -44,7 +23,7 @@ std::string containsEch(const std::string&& result) {
 }
 
 // Do a check for ECH. The input string is swapped with the ECH return value if it is found.
-void doQuery(std::string& domain, ldns_resolver *res) {
+void doQuery(std::string& domain, const ldns_resolver *res) {
 	ldns_rdf *dm = ldns_dname_new_frm_str(domain.c_str());
 	ldns_pkt *p = ldns_resolver_search(res, dm, LDNS_RR_TYPE_HTTPS, LDNS_RR_CLASS_IN, LDNS_RD);
 	ldns_rr_list *https = ldns_pkt_rr_list_by_type(p, LDNS_RR_TYPE_HTTPS, LDNS_SECTION_ANSWER);
