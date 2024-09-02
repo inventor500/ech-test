@@ -13,3 +13,8 @@ target_link_libraries(request curl)
 add_executable(ech-test main.cpp)
 target_link_libraries(ech-test PUBLIC dns request)
 target_compile_features(ech-test PUBLIC cxx_std_17)
+
+add_executable(ech-test_test test.cpp)
+target_link_libraries(ech-test_test PUBLIC gtest)
+add_test(NAME MainTest COMMAND ech-test_test)
+enable_testing()

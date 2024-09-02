@@ -34,3 +34,7 @@ Requires the following libraries to be available:
 
 This program uses CMake for compilation.
 
+## Limitations
+
+* This program includes code to check if a server actually accepts the key from the HTTPS DNS entry. This test feature does not currently work reliably, so only DNS tests are actually meaningful.
+This but will hopefully be fixed after OpenSSL adds ECH support.
