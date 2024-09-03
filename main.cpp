@@ -43,6 +43,7 @@ int main(int argc, const char *argv[]) {
 	}
 	Resolver* res = createResolver();
 	try {
+		initCurl();
 		for (int i = 1; i < argc; i++) {
 			std::optional<bool> result = doTest({argv[i]}, res);
 			std::cout << std::left << std::setw(maxDomainLength+1) << argv[i] << " ";
@@ -54,8 +55,10 @@ int main(int argc, const char *argv[]) {
 		}
 	} catch (const std::exception& e) { // Make sure that res gets freed
 		delete res;
+		destructCurl();
 		throw;
 	}
+	destructCurl();
 	delete res;
 	return 0;
 }

@@ -12,3 +12,5 @@
 #include <string>
 
 bool testConnect(const std::string& url, const std::string& echValue);
+void initCurl();
+void destructCurl();

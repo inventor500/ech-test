@@ -12,6 +12,14 @@
 #include <stdexcept>
 #include <curl/curl.h>
 
+void initCurl() {
+	curl_global_init(CURL_GLOBAL_DEFAULT);
+}
+
+void destructCurl() {
+	curl_global_cleanup();
+}
+
 bool testConnect(const std::string& url, const std::string& echValue) {
 	CURL *curl = curl_easy_init();
 	if (!curl) {
