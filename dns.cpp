@@ -10,6 +10,69 @@
 
 #include "dns.hpp"
 #include <stdexcept>
+#include <ldns/ldns.h>
+
+std::string containsEch(const std::string&& result);
+
+class ResolveWrapper : public Resolver {
+private:
+	ldns_resolver *res;
+public:
+	ResolveWrapper();
+	~ResolveWrapper() override;
+	void doQuery(std::string& domain) override;
+};
+
+Resolver* createResolver() {
+	return new ResolveWrapper();
+}
+
+ResolveWrapper::ResolveWrapper() {
+	ldns_status s = ldns_resolver_new_frm_file(&res, NULL);
+	if (s != LDNS_STATUS_OK) {
+		ldns_resolver_deep_free(res);
+		throw std::runtime_error("Unable to create resolver");
+	}
+}
+
+ResolveWrapper::~ResolveWrapper() {
+	if (res != nullptr) {
+		ldns_resolver_deep_free(res);
+	}
+}
+
+void ResolveWrapper::doQuery(std::string& domain) {
+	ldns_rdf *dm = ldns_dname_new_frm_str(domain.c_str());
+	ldns_pkt *p = ldns_resolver_search(res, dm, LDNS_RR_TYPE_HTTPS, LDNS_RR_CLASS_IN, LDNS_RD);
+	ldns_rr_list *https = ldns_pkt_rr_list_by_type(p, LDNS_RR_TYPE_HTTPS, LDNS_SECTION_ANSWER);
+	if (https == nullptr) {
+		ldns_rdf_deep_free(dm);
+		if (ldns_pkt_get_rcode(p) == LDNS_RCODE_NOERROR) { // Domain exists, but has no HTTPS section
+			ldns_pkt_free(p);
+			domain = "";
+			return;
+		}
+		ldns_pkt_free(p);
+		throw std::runtime_error("No records were returned");
+	}
+	domain = "";
+	if (https->_rr_count > 0) {
+		ldns_rr_list_sort(https);
+		for (size_t i = 0; i < ldns_rr_list_rr_count(https); i++) {
+			char *temp = ldns_rr2str(ldns_rr_list_rr(https, i));
+			std::string ech = containsEch(std::string{temp});
+			if (ech.size() != 0) {
+				std::swap(domain, ech);
+				free(temp); // Free before breaking, because the lower free won't be hit
+				break;
+			}
+			free(temp); // Free the c string
+		}
+	}
+	ldns_rr_list_deep_free(https);
+	ldns_rdf_deep_free(dm);
+	ldns_pkt_free(p);
+}
 
 
 // Returns just the ech section if it exists, otherwise returns an empty string

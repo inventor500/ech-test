@@ -16,10 +16,10 @@
 #include <numeric>
 #include <algorithm>
 
-std::optional<bool> doTest(const std::string& domain, const ldns_resolver *res) {
+std::optional<bool> doTest(const std::string& domain, Resolver* res) {
 	try {
 		std::string ech = domain;
-		doQuery(ech, res);
+		res->doQuery(ech);
 		if (ech == "") { // No DNS entry
 			return false;
 		}
@@ -41,21 +41,21 @@ int main(int argc, const char *argv[]) {
 	if (maxDomainLength == 0) {
 		std::cerr << "Received no valid input domains" << std::endl;
 	}
-	ldns_resolver *res;
-	ldns_status s = ldns_resolver_new_frm_file(&res, NULL); // Included as part of dns.hpp
-	if (s != LDNS_STATUS_OK) {
-		ldns_resolver_deep_free(res);
-		std::cerr << "Unable to create DNS resolver: " << ldns_get_errorstr_by_id(s) << std::endl;
-	}
-	for (int i = 1; i < argc; i++) {
-		std::optional<bool> result = doTest({argv[i]}, res);
-		std::cout << std::left << std::setw(maxDomainLength+1) << argv[i] << " ";
-		if (result.has_value()) {
-			std::cout << std::boolalpha << result.value() << std::endl;
-		} else {
-			std::cout << "null" << std::endl;
+	Resolver* res = createResolver();
+	try {
+		for (int i = 1; i < argc; i++) {
+			std::optional<bool> result = doTest({argv[i]}, res);
+			std::cout << std::left << std::setw(maxDomainLength+1) << argv[i] << " ";
+			if (result.has_value()) {
+				std::cout << std::boolalpha << result.value() << std::endl;
+			} else {
+				std::cout << "null" << std::endl;
+			}
 		}
+	} catch (const std::exception& e) { // Make sure that res gets freed
+		delete res;
+		throw;
 	}
-	ldns_resolver_deep_free(res);
+	delete res;
 	return 0;
 }

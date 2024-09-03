@@ -7,9 +7,16 @@
      This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
 */
 
-
 #pragma once
 #include <string>
-#include <ldns/ldns.h>
 
-void doQuery(std::string& domain, const ldns_resolver* res);
+// There is a concrete version of this in the .cpp file
+// Doing it this way means that only the .cpp file must be linked with ldns
+class Resolver {
+public:
+	virtual void doQuery(std::string& domain) = 0;
+	virtual ~Resolver() = 0;
+};
+inline Resolver::~Resolver(){}
+
+Resolver* createResolver();
