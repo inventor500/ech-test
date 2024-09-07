@@ -36,5 +36,6 @@ This program uses CMake for compilation.
 
 ## Limitations
 
-* This program includes code to check if a server actually accepts the key from the HTTPS DNS entry. This test feature does not currently work reliably, so only DNS tests are actually meaningful.
-This but will hopefully be fixed after OpenSSL adds ECH support.
+* The cURL-related code will not run on most systems, since cURL still considers ECH to be experimental.  
+If your cURL installation does not support ECH, this part of the test will be skipped, and a notice will be printed to standard error.
+* I have not (yet) tested what cURL will do when it does have ECH support.

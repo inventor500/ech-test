@@ -23,7 +23,12 @@ std::optional<bool> doTest(const std::string& domain, Resolver* res) {
 		if (ech == "") { // No DNS entry
 			return false;
 		}
+		// Only attempt a cURL query if cURL is built with ECH support
+		#ifdef USE_ECH
 		return testConnect("https://" + domain, ech);
+		#else
+		return true;
+		#endif
 	} catch (const std::runtime_error& err) {
 		return std::nullopt;
 	}
@@ -34,6 +39,10 @@ int main(int argc, const char *argv[]) {
 		std::cout << "Usage: " << argv[0] << " <domain>" << std::endl;
 		return 1;
 	}
+	// Print a warning about not checking servers for ECH
+	#ifndef USE_ECH
+	std::cerr << "No direct connection to a server will be attempted - linked cURL does not support ECH!" << std::endl;
+	#endif
 	size_t maxDomainLength = std::transform_reduce(
 		argv+1, argv+argc, 0,
 		[](size_t a, size_t b){return std::max(a, b);},

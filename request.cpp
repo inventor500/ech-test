@@ -27,7 +27,7 @@ bool testConnect(const std::string& url, const std::string& echValue) {
 	}
 	// TODO: Allow for arbitrary TLS-enabled protocols
 	curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
-	// TODO: Does this actually enforce ECH?
+	// TODO: This has not been tested, since my cURL installation does not support ECH
 	curl_easy_setopt(curl, CURLOPT_ECH, ("ecl:" + echValue).c_str());
 	curl_easy_setopt(curl, CURLOPT_NOBODY, 1);
 	curl_easy_setopt(curl, CURLOPT_NOPROGRESS, 1);
